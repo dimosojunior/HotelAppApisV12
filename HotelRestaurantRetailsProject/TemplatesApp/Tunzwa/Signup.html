@@ -1,0 +1,69 @@
+below are  my django apis codes that display all hotel users from MyUser django model, so in my django apis i have a model called HotelFoodOrder that stores all food orders,these orders they not created by customers themselves but they created by Hotel waiters that are stored in MyUser model, so the problem now is after displaying all hotel users from MyUser model then go to the HotelFoodOrder and filter all orders created by a specific user and then count them for each user and then store that counted number of orders for each user in a variable that can be in expo react native to display all users with their specific orders, so pass through my codes and modify them especially views.py and then give me full django codes and expo react native codes to implement this issue; my views.py codes;class CountHotelFoodOrderForEachUserView(APIView):
+    def get(self, request):
+        try:
+            queryset = MyUser.objects.filter(
+                #is_waiter = True,
+                is_hotel_user = True,
+                is_admin=False
+            )
+
+            serializer = MyUserSerializer(queryset, many=True)
+
+            response_data = {
+                'queryset': serializer.data,
+                
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e), "queryset":[]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+my django models;class HotelFoodOrder(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,blank=True, null=True)
+    cart = models.ForeignKey(HotelFoodCart, on_delete=models.CASCADE, blank=True, null=True)
+    #orderItems = models.ManyToManyField('HotelFoodOrderItems', blank=True,null=True)
+    total_price = models.FloatField(verbose_name="Total Price")
+    
+    table_number = models.CharField(max_length=500, verbose_name="Table Number",blank=True,null=True)
+    room_number = models.CharField(max_length=500, verbose_name="Room Number",blank=True,null=True)
+
+    pending_total_price = models.FloatField(verbose_name="Pending Total Price",blank=True,null=True)
+    true_total_price = models.FloatField(verbose_name="True Total Price",blank=True,null=True)
+
+    order_status = models.BooleanField(verbose_name="Status", default=False,blank=True,null=True)
+    closed_order_state = models.BooleanField(verbose_name="Is Order Closed ?", default=False,blank=True,null=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    #items = models.ForeignKey('HotelFoodOrderItems', on_delete=models.CASCADE,blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = "Hotel Food Orders"
+        #db_table='HotelFoodOrderTable'
+
+    
+
+    def __str__(self):
+        return f"Order {self.id} by {self.user.username}"
+
+
+class HotelFoodOrderItems(models.Model):
+    order = models.ForeignKey(HotelFoodOrder, on_delete=models.CASCADE) 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,blank=True, null=True)
+    product = models.ForeignKey(HotelFoodProducts,on_delete=models.CASCADE)
+    price = models.FloatField(default=0)
+    Customer = models.ForeignKey(HotelCustomers,on_delete=models.CASCADE,blank=True,null=True)
+    table = models.ForeignKey(HotelTables,on_delete=models.PROTECT,blank=True,null=True)
+    room = models.ForeignKey('HotelRooms',on_delete=models.PROTECT,blank=True,null=True)
+    order_status = models.BooleanField(verbose_name="Status", default=False,blank=True,null=True)
+
+
+    quantity = models.IntegerField(default=1)
+    Created = models.DateTimeField(auto_now_add=True)
+    Updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Hotel Food Orders Items"
+
+    def __str__(self):
+        #return f" {self.product.product_name} {self.product.product_second_name} "
+        return f" {self.product.product_name} {self.product.product_second_name} "
+
